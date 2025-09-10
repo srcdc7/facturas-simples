@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Facturas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px;
+        }
+        .form-section, .preview-section {
+            margin-bottom: 2rem;
+        }
+        .invoice-preview {
+            border: 1px solid #e5e7eb;
+            border-radius: 1rem;
+            padding: 2rem;
+            background-color: #fafafa;
+            transition: all 0.3s ease;
+        }
+        .invoice-preview h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .invoice-preview h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+        }
+        .invoice-preview p {
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5da;
+            border-radius: 0.5rem;
+            transition: border-color 0.2s;
+            background-color: #fff;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        .label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background-color: #6366f1;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-primary:hover {
+            background-color: #4f46e5;
+        }
+        .grid-cols-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .grid-cols-3 {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .grid-cols-4 {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+        .product-table th, .product-table td {
+            padding: 0.75rem;
+            text-align: left;
+        }
+        .product-table th {
+            background-color: #e5e7eb;
+            font-weight: 600;
+        }
+        .product-table tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-start justify-center p-8">
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center text-indigo-600 mb-8">Generador de Facturas</h1>
+        
+        <div class="form-section">
+            <h2 class="text-2xl font-semibold mb-6 text-center">Datos de la Factura</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label for="companyName" class="label">Nombre de la Empresa</label>
+                    <input type="text" id="companyName" placeholder="Ej. Aqua Express S.A.S." class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+                <div>
+                    <label for="clientName" class="label">Nombre del Cliente</label>
+                    <input type="text" id="clientName" placeholder="Ej. Juan Pérez" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+                <div class="md:col-span-2">
+                    <label for="clientId" class="label">Documento de Identidad del Cliente</label>
+                    <input type="text" id="clientId" placeholder="Ej. 123456789" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-semibold mb-6 text-center">Añadir Producto</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 items-end">
+                <div>
+                    <label for="productType" class="label">Tipo de Producto</label>
+                    <select id="productType" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <option value="agua">Agua</option>
+                        <option value="hielo">Hielo</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="quantity" id="quantityLabel" class="label">Cantidad (botellones)</label>
+                    <input type="number" id="quantity" placeholder="1" min="1" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+                <div id="iceWeightDiv" class="hidden">
+                    <label for="iceWeight" class="label">Peso (kg)</label>
+                    <input type="number" id="iceWeight" placeholder="5" min="1" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+                <div>
+                    <label for="unitPrice" class="label">Valor Unitario</label>
+                    <input type="number" id="unitPrice" placeholder="1500" min="0" step="100" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+                <button id="addItemBtn" class="btn-primary col-span-1 lg:col-span-4 mt-2">Añadir Producto</button>
+            </div>
+            
+            <div id="invoiceItems" class="mb-6">
+                <table class="w-full product-table rounded-lg overflow-hidden border border-gray-200">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="py-3 px-4">Producto</th>
+                            <th class="py-3 px-4">Cantidad</th>
+                            <th class="py-3 px-4 text-right">Valor Unitario</th>
+                            <th class="py-3 px-4 text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsList">
+                        <!-- Los productos añadidos se insertarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex justify-end mt-4">
+                <div class="text-right">
+                    <p class="text-lg font-semibold">Subtotal: <span id="subtotal">0</span></p>
+                    <p class="text-lg font-semibold">Total: <span id="total">0</span></p>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-8 border-gray-300">
+
+        <div class="preview-section" id="invoicePreview">
+            <h2 class="text-2xl font-semibold mb-6 text-center">Vista Previa de la Factura</h2>
+            <div class="invoice-preview min-h-[300px]">
+                <div id="previewContent">
+                    <p class="text-center text-gray-500">
+                        Rellena los campos y añade productos para generar la factura.
+                    </p>
+                </div>
+            </div>
+            <div class="flex justify-center mt-6">
+                 <button id="downloadInvoiceBtn" class="btn-primary w-full max-w-sm">
+                    Descargar Factura
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const companyNameInput = document.getElementById('companyName');
+            const clientNameInput = document.getElementById('clientName');
+            const clientIdInput = document.getElementById('clientId');
+            const productTypeSelect = document.getElementById('productType');
+            const quantityInput = document.getElementById('quantity');
+            const quantityLabel = document.getElementById('quantityLabel');
+            const iceWeightDiv = document.getElementById('iceWeightDiv');
+            const unitPriceInput = document.getElementById('unitPrice');
+            const addItemBtn = document.getElementById('addItemBtn');
+            const itemsList = document.getElementById('itemsList');
+            const subtotalSpan = document.getElementById('subtotal');
+            const totalSpan = document.getElementById('total');
+            const previewContent = document.getElementById('previewContent');
+            const downloadInvoiceBtn = document.getElementById('downloadInvoiceBtn');
+            const invoicePreviewDiv = document.querySelector('.invoice-preview');
+
+            let invoiceItems = [];
+
+            // Listen for changes on the product type to show/hide the weight field
+            productTypeSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'hielo') {
+                    iceWeightDiv.classList.remove('hidden');
+                    quantityLabel.textContent = 'Cantidad (bolsas)';
+                } else {
+                    iceWeightDiv.classList.add('hidden');
+                    quantityLabel.textContent = 'Cantidad (botellones)';
+                }
+            });
+
+            // Handle adding a new item to the invoice
+            addItemBtn.addEventListener('click', () => {
+                const productType = productTypeSelect.value;
+                const quantity = parseFloat(quantityInput.value);
+                const unitPrice = parseFloat(unitPriceInput.value);
+                const iceWeight = productType === 'hielo' ? parseFloat(document.getElementById('iceWeight').value) : null;
+
+                if (quantity > 0 && unitPrice >= 0) {
+                    const total = quantity * unitPrice;
+                    const productName = productType === 'agua' ? 'Agua' : `Hielo (${iceWeight || 0}kg)`;
+                    
+                    const newItem = {
+                        product: productName,
+                        quantity: quantity,
+                        unitPrice: unitPrice,
+                        total: total
+                    };
+                    invoiceItems.push(newItem);
+                    updateInvoiceDisplay();
+                } else {
+                    // Use a simple modal message box instead of alert()
+                    showCustomMessage('Por favor, ingresa una cantidad y un valor unitario válidos.');
+                }
+            });
+
+            // Update the display with current items and totals
+            function updateInvoiceDisplay() {
+                // Clear previous items
+                itemsList.innerHTML = '';
+                
+                let subtotal = 0;
+                
+                // Add new items
+                invoiceItems.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.classList.add('hover:bg-gray-50');
+                    row.innerHTML = `
+                        <td class="py-3 px-4">${item.product}</td>
+                        <td class="py-3 px-4">${item.quantity}</td>
+                        <td class="py-3 px-4 text-right">$${item.unitPrice.toFixed(2)}</td>
+                        <td class="py-3 px-4 text-right">$${item.total.toFixed(2)}</td>
+                    `;
+                    itemsList.appendChild(row);
+                    subtotal += item.total;
+                });
+                
+                const total = subtotal; // No taxes for simplicity
+                
+                subtotalSpan.textContent = `$${subtotal.toFixed(2)}`;
+                totalSpan.textContent = `$${total.toFixed(2)}`;
+                
+                updatePreview();
+            }
+
+            // Update the final invoice preview section
+            function updatePreview() {
+                const companyName = companyNameInput.value || 'Nombre de la Empresa';
+                const clientName = clientNameInput.value || 'Nombre del Cliente';
+                const clientId = clientIdInput.value || 'Documento de Identidad';
+
+                let itemsHtml = '<ul class="mt-4 space-y-2">';
+                invoiceItems.forEach(item => {
+                    itemsHtml += `
+                        <li class="flex justify-between items-center">
+                            <span class="font-medium">${item.product} (${item.quantity})</span>
+                            <span class="font-semibold text-right">$${item.total.toFixed(2)}</span>
+                        </li>
+                    `;
+                });
+                itemsHtml += '</ul>';
+
+                if (invoiceItems.length > 0) {
+                    previewContent.innerHTML = `
+                        <h2 class="text-xl font-bold mb-4">${companyName}</h2>
+                        <div class="flex justify-between text-sm text-gray-600 mb-6">
+                            <span>Fecha: ${new Date().toLocaleDateString()}</span>
+                            <span>Factura # ${Math.floor(Math.random() * 100000)}</span>
+                        </div>
+                        <div class="border-b border-gray-200 pb-4 mb-4">
+                            <p><strong>Cliente:</strong> ${clientName}</p>
+                            <p><strong>Documento:</strong> ${clientId}</p>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2">Detalles del Pedido</h3>
+                        ${itemsHtml}
+                        <div class="border-t border-gray-200 mt-6 pt-4 text-right">
+                            <p class="font-semibold text-lg">Subtotal: <span class="text-indigo-600">$${subtotalSpan.textContent.replace('$', '')}</span></p>
+                            <p class="font-bold text-xl mt-2">Total: <span class="text-indigo-600">$${totalSpan.textContent.replace('$', '')}</span></p>
+                        </div>
+                    `;
+                } else {
+                     previewContent.innerHTML = `
+                        <p class="text-center text-gray-500">
+                            Rellena los campos y añade productos para generar la factura.
+                        </p>
+                    `;
+                }
+            }
+
+            // A simple message box function to replace alert()
+            function showCustomMessage(message) {
+                const modalHtml = `
+                    <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50">
+                        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
+                            <p class="text-gray-700 text-center mb-4">${message}</p>
+                            <div class="flex justify-center">
+                                <button id="closeModal" class="btn-primary w-1/2">OK</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                const modal = document.createElement('div');
+                modal.innerHTML = modalHtml;
+                document.body.appendChild(modal);
+                document.getElementById('closeModal').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                });
+            }
+
+            // New logic for downloading the invoice
+            downloadInvoiceBtn.addEventListener('click', () => {
+                if (invoiceItems.length === 0) {
+                    showCustomMessage('No puedes descargar una factura vacía. Por favor, añade al menos un producto.');
+                    return;
+                }
+
+                // Use html2canvas to capture the invoice preview area
+                html2canvas(invoicePreviewDiv).then(canvas => {
+                    // Convert canvas to data URL (PNG format)
+                    const imgData = canvas.toDataURL('image/png');
+
+                    // Create a temporary link element to trigger the download
+                    const link = document.createElement('a');
+                    link.href = imgData;
+                    link.download = `factura_${clientNameInput.value.replace(/ /g, '_')}_${Date.now()}.png`;
+
+                    // Append to body, click, and remove
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }).catch(err => {
+                    console.error('Error al generar la imagen:', err);
+                    showCustomMessage('Hubo un error al generar la factura. Por favor, inténtalo de nuevo.');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
